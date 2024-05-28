@@ -1,2 +1,0 @@
-# Servidor-LLM-GPT
-Estudos
