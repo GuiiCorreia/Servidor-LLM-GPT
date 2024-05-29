@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot Interface</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap');
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #653697 0%, #0c1f8b 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            color: white;
+            text-align: justify;
+        }
+        #chat-container {
+            width: 500px;
+            height: 50%; /* Define a altura do container */
+            background: #1e1e2f;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7);
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        #chat-header {
+            background: linear-gradient(135deg, #843cd1, #0c1f8b);
+            padding: 15px;
+            text-align: center;
+            font-size: 1.5em;
+            font-weight: 500;
+            border-bottom: 1px solid #00000000;
+        }
+        #chat-box {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background: linear-gradient(135deg,  #843cd1, #0c1f8b);
+        }
+        .message {
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+        }
+        .message.user {
+            flex-direction: row-reverse;
+        }
+        .message .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #3a3a3a;
+        }
+        .message .text {
+            padding: 12px 18px;
+            border-radius: 20px;
+            max-width: 70%;
+            word-wrap: break-word;
+            position: relative;
+            animation: fadeIn 0.5s;
+            box-shadow: 0 2px 5px rgba(255, 255, 255, 0.2);
+        }
+        .message.user .text {
+            background: linear-gradient(135deg,  #843cd1, #0c1f8b);
+            color: white;
+        }
+        .message.assistant .text {
+            background: linear-gradient(135deg,  #634386, #0c1f8b);
+            color: white;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        #input-container {
+            display: flex;
+            padding: 10px;
+            background: linear-gradient(135deg, #843cd1, #0c1f8b);
+            border-top: 1px solid #ff000000;
+        }
+        #user-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #4158dd;
+            border-radius: 30px;
+            outline: none;
+            transition: border-color 0.3s;
+            font-size: 1em;
+            padding-left: 15px;
+            background: linear-gradient(135deg, #6a11cb, #0c1f8b);
+            color: white;
+        }
+        #user-input::placeholder {
+            color: #ffffff;
+        }
+        #user-input:focus {
+            border-color: #ffffff;
+        }
+        #send-btn {
+            padding: 10px 20px;
+            border: none;
+            background: linear-gradient(135deg, #6a11cb, #0c1f8b);
+            color: white;
+            cursor: pointer;
+            border-radius: 30px;
+            margin-left: 10px;
+            transition: background 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1em;
+        }
+        #send-btn:hover {
+            background: #5b4aa8;
+        }
+        #send-btn i {
+            margin-left: 5px;
+        }
+    </style>
+    
+<body>
+    <div id="chat-container">
+        <div id="chat-header">Chatbot</div>
+        <div id="chat-box"></div>
+        <div id="input-container">
+            <input type="text" id="user-input" placeholder="Digite aqui...">
+            <button id="send-btn">Enviar <i class="fas fa-paper-plane"></i></button>
+        </div>
+    </div>
+
+    <script>
+        const chatBox = document.getElementById('chat-box');
+        const userInput = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
+
+        let threadId = null;
+
+        async function initializeThread() {
+            try {
+                const threadResponse = await fetch('http://localhost:5000/create_thread', { method: 'POST' });
+                const threadData = await threadResponse.json();
+                threadId = threadData.thread.id;
+                console.log('Thread ID:', threadId);
+            } catch (error) {
+                console.error('Error initializing thread:', error);
+            }
+        }
+
+        async function sendMessageToAssistant(message) {
+            console.log('Adding message to thread with ID:', threadId);
+            await fetch(`http://localhost:5000/add_message_to_thread/${threadId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ content: message })
+            });
+
+            console.log('Running assistant');
+            const response = await fetch(`http://localhost:5000/run_assistant/${threadId}`, {
+                method: 'POST'
+            });
+            const data = await response.json();
+            return data.message;
+        }
+
+        function appendMessage(content, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message', sender);
+
+            const avatarDiv = document.createElement('div');
+            avatarDiv.classList.add('avatar');
+
+            const textDiv = document.createElement('div');
+            textDiv.classList.add('text');
+            textDiv.innerText = content;
+
+            messageDiv.appendChild(avatarDiv);
+            messageDiv.appendChild(textDiv);
+
+            chatBox.appendChild(messageDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        async function handleSendMessage() {
+            const message = userInput.value;
+            if (message.trim()) {
+                appendMessage(message, 'user');
+                userInput.value = '';
+                userInput.disabled = true;
+                sendBtn.disabled = true;
+
+                try {
+                    if (!threadId) {
+                        await initializeThread();
+                    }
+
+                    const assistantResponse = await sendMessageToAssistant(message);
+                    appendMessage(assistantResponse, 'assistant');
+                } catch (error) {
+                    console.error('Error:', error);
+                } finally {
+                    userInput.disabled = false;
+                    sendBtn.disabled = false;
+                    userInput.focus();
+                }
+            }
+        }
+
+        sendBtn.addEventListener('click', handleSendMessage);
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                handleSendMessage();
+            }
+        });
+
+        // Inicia a thread quando a página é carregada
+        window.onload = initializeThread;
+    </script>
+</body>
+</html>
