@@ -37,6 +37,7 @@ def initialize_assistant():
                 temperature=0.1,
                 #tools=[{"type":"file_search"}],
             )
+            
             assistant_id = my_assistant.id
             with open(assistant_id_file, 'w', encoding='utf-8') as file:
                 file.write(assistant_id)
