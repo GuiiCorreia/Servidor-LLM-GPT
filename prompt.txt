@@ -9,3 +9,4 @@ Exemplo:
     • Pergunta do usuário: "Como posso resolver uma disputa de crédito?"
     • Contexto extraído: Resolver / disputa de crédito.
 Use esses exemplos como guia para extrair o contexto das frases que os usuários enviarem. Retorne apenas o contexto relevante em uma frase curta.
+
