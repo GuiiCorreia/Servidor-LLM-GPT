@@ -17,3 +17,8 @@ O projeto cria um assistente (assistant) usando a API da OpenAI e para cada inte
 
 - `servidor.py`: Arquivo principal do servidor Flask que gerencia as requisições e interações com a API da OpenAI.
 - `static/`: Pasta contendo arquivos estáticos, como HTML, CSS e JavaScript.
+
+## Melhorias
+Agora pode reaproveitar um ID de um Assistant já criado, evitando que toda vez que inicia o servidor, ele crie um novo Assistant desnecessario, basta colocar o ID do Assistant na pasta `assistant_id.txt`.
+
+`prompt.tx` - Para melhor legibilidade do codigo, o prompt completo pode ser escrito nesse arquivo, e sendo usado na linha 36 de `servidor.py`.
